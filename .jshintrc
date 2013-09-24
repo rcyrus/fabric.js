@@ -1,5 +1,7 @@
 {
   "globals": {
+    "define":             true,
+    "exports":            true,
     "fabric":             true,
     "Cufon":              true,
     "Event":              true,
@@ -36,5 +38,6 @@
   "sub":      true,
   "strict":   false,
   "white":    false,
-  "unused":   true
+  "unused":   true,
+  "lastsemic": true
 }

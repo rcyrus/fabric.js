@@ -7,17 +7,27 @@
   var DOMParser = new require('xmldom').DOMParser,
       URL = require('url'),
       HTTP = require('http'),
+      HTTPS = require('https'),
 
       Canvas = require('canvas'),
       Image = require('canvas').Image;
 
   /** @private */
   function request(url, encoding, callback) {
-    var oURL = URL.parse(url),
-    req = HTTP.request({
+    var oURL = URL.parse(url);
+
+    // detect if http or https is used
+    if ( !oURL.port ) {
+      oURL.port = ( oURL.protocol.indexOf('https:') === 0 ) ? 443 : 80;
+    }
+
+    // assign request handler based on protocol
+    var reqHandler = ( oURL.port === 443 ) ? HTTPS : HTTP;
+
+    var req = reqHandler.request({
       hostname: oURL.hostname,
       port: oURL.port,
-      path: oURL.pathname,
+      path: oURL.path,
       method: 'GET'
     }, function(response){
       var body = "";
@@ -42,13 +52,28 @@
         fabric.log(err.message);
       }
     });
+
+    req.end();
   }
 
   /** @private */
+<<<<<<< HEAD
   function request_fs(url, callback){
     var fs = require('fs'),
     body = fs.readFileSync(url);
     callback(body);
+=======
+  function request_fs(path, callback){
+    var fs = require('fs');
+    fs.readFile(path, function (err, data) {
+      if (err) {
+        fabric.log(err);
+        throw err;
+      } else {
+        callback(data);
+      }
+    });
+>>>>>>> master
   }
 
   fabric.util.loadImage = function(url, callback, context) {
@@ -59,7 +84,7 @@
       callback && callback.call(context, img);
     };
     var img = new Image();
-    if (url && url.indexOf('data') === 0) {
+    if (url && (url instanceof Buffer || url.indexOf('data') === 0)) {
       img.src = img._src = url;
       callback && callback.call(context, img);
     }
@@ -71,18 +96,25 @@
     }
   };
 
-  fabric.loadSVGFromURL = function(url, callback) {
+  fabric.loadSVGFromURL = function(url, callback, reviver) {
     url = url.replace(/^\n\s*/, '').replace(/\?.*$/, '').trim();
-    request(url, '', function(body) {
-      fabric.loadSVGFromString(body, callback);
-    });
+    if (url.indexOf('http') !== 0) {
+      request_fs(url, function(body) {
+        fabric.loadSVGFromString(body, callback, reviver);
+      });
+    }
+    else {
+      request(url, '', function(body) {
+        fabric.loadSVGFromString(body, callback, reviver);
+      });
+    }
   };
 
-  fabric.loadSVGFromString = function(string, callback) {
+  fabric.loadSVGFromString = function(string, callback, reviver) {
     var doc = new DOMParser().parseFromString(string);
     fabric.parseSVGDocument(doc.documentElement, function(results, options) {
-      callback(results, options);
-    });
+      callback && callback(results, options);
+    }, reviver);
   };
 
   fabric.util.getScript = function(url, callback) {
@@ -97,14 +129,15 @@
       var oImg = new fabric.Image(img);
 
       oImg._initConfig(object);
-      oImg._initFilters(object);
-      callback(oImg);
+      oImg._initFilters(object, function(filters) {
+        oImg.filters = filters || [ ];
+        callback && callback(oImg);
+      });
     });
   };
 
   /**
    * Only available when running fabric on node.js
-   * @method createCanvasForNode
    * @param width Canvas width
    * @param height Canvas height
    * @return {Object} wrapped canvas instance
