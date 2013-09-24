@@ -57,23 +57,10 @@
   }
 
   /** @private */
-<<<<<<< HEAD
   function request_fs(url, callback){
     var fs = require('fs'),
     body = fs.readFileSync(url);
     callback(body);
-=======
-  function request_fs(path, callback){
-    var fs = require('fs');
-    fs.readFile(path, function (err, data) {
-      if (err) {
-        fabric.log(err);
-        throw err;
-      } else {
-        callback(data);
-      }
-    });
->>>>>>> master
   }
 
   fabric.util.loadImage = function(url, callback, context) {

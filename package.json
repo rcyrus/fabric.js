@@ -14,15 +14,9 @@
     "test": "node test.js && jshint src"
   },
   "dependencies": {
-<<<<<<< HEAD
-    "canvas": "~1.0.0",
-    "jsdom": "0.5.6",
-    "xmldom": ">=0.1.7"
-=======
     "canvas": "1.0.x",
     "jsdom": "0.7.x",
     "xmldom": "0.1.x"
->>>>>>> master
   },
   "devDependencies": {
     "qunit": "0.5.x",
